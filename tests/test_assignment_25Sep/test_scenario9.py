@@ -1,0 +1,50 @@
+#Scenario 9: DemoWebShop – Product Details
+from playwright.sync_api import sync_playwright, expect
+BASE_URL = "https://demowebshop.tricentis.com/"
+PRODUCT_NAME = "Simple Computer"
+EXPECTED_PRICE = "800.00"
+def test_demo_webshop():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+        page.goto(BASE_URL)
+        expect(page).to_have_title("Demo Web Shop")
+        search_box = page.locator("#small-searchterms")
+        search_box.fill(PRODUCT_NAME)
+        search_box.press("Enter")
+        product_link = page.get_by_role("link",name=PRODUCT_NAME,exact=True)
+        expect(product_link).to_be_visible()
+        product_link.click()
+        product_title = page.get_by_role( "heading",name=PRODUCT_NAME,exact=True)
+        expect(product_title).to_be_visible()
+        expect(product_title).to_have_text(PRODUCT_NAME)
+        product_price = page.locator(".product-price")
+        expect(product_price).to_be_visible()
+        expect(product_price).to_contain_text(EXPECTED_PRICE)
+        processor = page.get_by_role("radio",name="Slow",exact=True)
+        expect(processor).to_be_visible()
+        processor.click()
+        expect(processor).to_be_checked()
+        add_to_cart = page.get_by_role("button",name="Add to cart",exact=True).first
+        expect(add_to_cart).to_be_visible()
+        expect(add_to_cart).to_be_enabled()
+        add_to_cart.click()
+        success_message = page.locator(".bar-notification.success")
+        expect(success_message).to_be_visible(timeout=10000)
+        expect(success_message).to_contain_text("The product has been added to your shopping cart")
+        cart_count = page.locator("a.ico-cart").first
+        expect(cart_count).to_contain_text("(1)")
+        cart_count.click()
+        cart_product = page.get_by_role("link",name=PRODUCT_NAME,exact=True)
+        expect(cart_product).to_be_visible()
+        print()
+        print("========================================")
+        print("           TEST PASSED")
+        print("========================================")
+        print(f"Product     : {PRODUCT_NAME}")
+        print(f"Price       : {EXPECTED_PRICE}")
+        print("Processor   : Slow")
+        print("Add to Cart : Successful")
+        print("Cart        : Product added")
+        print("========================================")
+        browser.close()
